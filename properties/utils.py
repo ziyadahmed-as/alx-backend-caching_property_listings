@@ -1,4 +1,5 @@
 # properties/utils.py
+
 from django_redis import get_redis_connection
 import logging
 from django.core.cache import cache
@@ -15,6 +16,10 @@ def get_all_properties():
 logger = logging.getLogger(__name__)
 
 def get_redis_cache_metrics():
+    """
+    Connect to Redis, retrieve keyspace_hits and keyspace_misses,
+    calculate and return hit_ratio, and log the metrics.
+    """
     try:
         redis_conn = get_redis_connection("default")  # Adjust cache alias if needed
         info = redis_conn.info('stats')
@@ -22,12 +27,13 @@ def get_redis_cache_metrics():
         misses = info.get('keyspace_misses', 0)
 
         total_requests = hits + misses
-        if total_requests > 0:
-            hit_ratio = hits / total_requests
-        else:
-            hit_ratio = 0
+        # Calculates and returns hit_ratio
+        hit_ratio = hits / total_requests if total_requests > 0 else 0
 
-        logger.info(f"Redis Cache Metrics - Hits: {hits}, Misses: {misses}, Hit Ratio: {hit_ratio:.2f}")
+        logger.info(
+            f"Redis Cache Metrics - Hits: {hits}, "
+            f"Misses: {misses}, Hit Ratio: {hit_ratio:.2f}"
+        )
 
         return {
             'hits': hits,
